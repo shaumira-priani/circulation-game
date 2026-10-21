@@ -232,7 +232,7 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('but
 const SAY={RBC:'Sel darah merah siap!','RBC+O2':'Oksigen terisi!','RBC+CO2':'Ambil CO₂ ya!',GLU:'Glukosa siap!',W:'Bawa ke ginjal!','':'Beres!'};
 const _a1=act1;act1=function(){const c=S.carry,t0=tot(),e=S.err;_a1();if(S.err>e){sfx('err');say(S,'Hmm, belum bisa 🤔')}else if(S.carry!==c||tot()!==t0){sfx(tot()>t0?'deliver':'pick');say(S,tot()>t0?'Berhasil! 🎉':SAY[S.carry]);const n=S.carry;fact(c===''&&n==='RBC'?'rbc':c==='RBC'&&n==='RBC+O2'?'o2':c==='RBC+CO2'&&n==='RBC'?'co2':c===''&&n==='GLU'?'glu':c==='W'&&n===''?'urea':'')}};
 const _tt=tt;tt=function(m){_tt(m);if(/Naik level/.test(m))sfx('level');else if(/Misi selesai/.test(m))sfx('mission');else if(/Lencana/.test(m))sfx('badge');else if(/Penemuan baru/.test(m))sfx('disc')};
-const _fb=fb;fb=function(g,e){_fb(g,e);sfx(g?'pick':'err')};
+const _rc=rec;rec=function(c,ok){_rc(c,ok);if(busy)sfx(ok?'pick':'err')};
 const _md=modal;modal=function(h){_md(h);if(/EKSPEDISI SELESAI|Pemenang/.test(h))sfx('win')};
 
 /* ===== BATTLE ONLINE (beda perangkat) ===== */
