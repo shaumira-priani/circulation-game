@@ -60,6 +60,7 @@ table.tb{width:100%;border-collapse:collapse;font-size:12px}.tb th,.tb td{paddin
 <button id="cont" onclick="begin(1)" style="display:none">▶ Lanjutkan Latihan</button>
 </div></div>
 <script>
+var OL=null;
 const $=i=>document.getElementById(i),cv=$('c'),x=cv.getContext('2d'),Z=1.5,W=1289,H=3864,AV=['#e0475b','#3b82c4','#2f9e6f','#e0a030','#8a5bd6','#d6609a'],K='kotatubuh1';
 const ST=[{n:'Sel Kepala',x:325,y:365,t:'cell',id:'kep'},{n:'Sel Tangan Kiri',x:145,y:1415,t:'cell',id:'tk'},{n:'Sel Tangan Kanan',x:728,y:1425,t:'cell',id:'tr'},{n:'Sel Kaki Kiri',x:160,y:2460,t:'cell',id:'fk'},{n:'Sel Kaki Kanan',x:700,y:2455,t:'cell',id:'fr'},{n:'Paru-paru',x:295,y:1050,t:'par'},{n:'Paru-paru',x:570,y:1030,t:'par'},{n:'Usus',x:430,y:1420,t:'usu'},{n:'Ginjal',x:315,y:1260,t:'gin'},{n:'Ginjal',x:555,y:1265,t:'gin'},{n:'Sumsum Tulang',x:325,y:1610,t:'sum'},{n:'Sumsum Tulang',x:530,y:1610,t:'sum'}];
 const NP=[{n:'Pemandu Aturan',x:300,y:850,c:'#ed1c2e',h:'#222',l:['Selamat datang! Tujuan: antar semua oksigen & glukosa ke 5 sel, buang CO₂ ke paru-paru dan sisa metabolisme ke ginjal.','Oksigen harus dibawa sel darah merah: ambil di Sumsum Tulang, lalu isi O₂ di Paru-paru.','Glukosa + asam amino diambil dari Usus dan langsung diantar, tanpa sel darah merah.','Setelah mengantar O₂ ambil CO₂ → paru-paru. Setelah glukosa ambil sisa metabolisme → Ginjal.'],q:{c:'sdm',q:'Siapa yang mengangkut oksigen?',o:['Sel darah merah','Ginjal','Usus'],a:0}},
@@ -73,13 +74,13 @@ AV.forEach((c,i)=>{const d=document.createElement('span');d.className='av'+(i?''
 try{if(localStorage.getItem(K))$('cont').style.display=''}catch(e){}
 function fresh(){const c={};ST.filter(s=>s.t=='cell').forEach(s=>c[s.id]={o:0,g:0,c:0,w:0});return{o2:5,gl:5,name:$('nm').value||'Siswa',cls:$('kl').value||'-',av:sel,x:570,y:1995,carry:'',src:'',cells:c,f:{},xp:0,j:[],b:[],q:{c:{},t:{}},err:0,tm:0,mi:0}}
 function begin(c){B=null;busy=false;document.querySelectorAll('.pr1').forEach(e=>e.style.display='');try{S=c?JSON.parse(localStorage.getItem(K)):fresh()}catch(e){S=fresh()}if(!S)S=fresh();if(S.o2==null){S.o2=need('o').length-(S.carry=='RBC+O2'?1:0);S.gl=need('g').length-(S.carry=='GLU'?1:0)}$('st').style.display='none';$('hud').style.display=$('bar').style.display='';run=true;rs();upd();tt('Selamat datang, '+S.name+'!');firstHelp()}
-function save(){if(B)return;try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+function save(){if(B||OL)return;try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
 setInterval(()=>S&&run&&save(),8000);
 function tt(m){if(B&&S)m=S.name+': '+m;const t=$('tt');t.textContent=m;t.style.opacity=1;clearTimeout(t.h);t.h=setTimeout(()=>t.style.opacity=0,2200)}
 function tot(){let n=0;for(const k in S.cells){const c=S.cells[k];n+=c.o+c.g+c.c+c.w}return n}
 function need(k){return Object.keys(S.cells).filter(i=>!S.cells[i][k])}
 function cellPos(id){return ST.find(s=>s.id==id)}
-function near(r){let b=null,bd=r||85;[...ST,...(B?[]:NP)].forEach(o=>{const d=Math.hypot(o.x-S.x,o.y-S.y);if(d<bd){bd=d;b=o}});return b}
+function near(r){let b=null,bd=r||85;[...ST,...(B||OL?[]:NP)].forEach(o=>{const d=Math.hypot(o.x-S.x,o.y-S.y);if(d<bd){bd=d;b=o}});return b}
 function nearest(t){let b=null,bd=1e9;ST.filter(s=>s.t==t).forEach(s=>{const d=Math.hypot(s.x-S.x,s.y-S.y);if(d<bd){bd=d;b=s}});return b}
 function mis(){const f=S.f,t=tot(),c=S.carry;
 if(!f.merah)return[0,'Temui Pemandu Aturan',NP[0]];if(!f.scan)return[1,'Pindai objek apa saja dengan F / SCAN',near(1e9)];
@@ -92,7 +93,7 @@ if(c=='RBC')return S.o2>0?nearest('par'):nearest('sum');return need('g').length&
 function xp(n){const l=lv();S.xp+=n;if(lv()>l)tt('Naik level: '+LN[lv()]+'!')}
 function lv(){let l=0;LV.forEach((v,i)=>{if(S.xp>=v)l=i});return l}
 function badge(b){if(!S.b.includes(b)){S.b.push(b);tt('🏅 Lencana: '+b)}}
-function upd(){if(B){hudB();return}const m=mis();if(m[0]>S.mi){xp(50*(m[0]-S.mi));S.mi=m[0];tt('Misi selesai! +50 XP')}save();const l=lv();
+function upd(){if(B){hudB();return}if(OL){hudO();return}const m=mis();if(m[0]>S.mi){xp(50*(m[0]-S.mi));S.mi=m[0];tt('Misi selesai! +50 XP')}save();const l=lv();
 $('hud').innerHTML='<b>'+S.name+'</b> · Lv'+(l+1)+' '+LN[l]+' · '+S.xp+' XP<div class="bar"><i style="width:'+Math.min(100,S.xp/7)+'%"></i></div><b>MISI '+(m[0]+1>10?10:m[0]+1)+'/10</b><br>'+m[1]+'<br>Membawa: '+({'':'-',RBC:'🔴 Sel darah merah','RBC+O2':'🔴+O₂','RBC+CO2':'🔴+CO₂',GLU:'🍬 Glukosa',W:'💧 Sisa metabolisme'})[S.carry]+'<br><b style="color:#b36b00">💡 '+tip()+'</b>'}
 function tip(){if(tot()>=20)return 'Semua tugas selesai!';const c=S.carry,g=tg(),n=g?g.n:'sel';if(c=='')return 'Ambil sel darah merah di Sumsum Tulang (untuk oksigen) atau glukosa di Usus. Tekan E.';if(c=='RBC')return S.o2>0?'Bawa ke Paru-paru, tekan E untuk isi oksigen.':'Oksigen habis. Kembalikan ke Sumsum Tulang (E).';if(c=='RBC+O2')return 'Antar oksigen ke '+n+', tekan E.';if(c=='RBC+CO2')return 'Bawa karbon dioksida ke Paru-paru, tekan E.';if(c=='GLU')return 'Antar glukosa ke '+n+', tekan E.';return 'Bawa sisa metabolisme ke Ginjal, tekan E.'}
 const tpP=P=>{const s=S;S=P;const n=tip();S=s;return n};
@@ -144,9 +145,9 @@ onkeydown=e=>{const k=e.key.toLowerCase();keys[k]=1;if(B){if(k=='e')pa(0);if(k==
 function mkJoy(el,kn,o){let a=0;const m=e=>{const r=el.getBoundingClientRect(),h=r.width/2,dx=e.clientX-r.left-h,dy=e.clientY-r.top-h,l=Math.hypot(dx,dy)||1,k=Math.min(1,l/(h*.8));o.x=dx/l*k;o.y=dy/l*k;kn.style.transform='translate('+o.x*h*.65+'px,'+o.y*h*.65+'px)'};el.onpointerdown=e=>{a=1;el.setPointerCapture(e.pointerId);m(e)};el.onpointermove=e=>a&&m(e);el.onpointerup=el.onpointercancel=()=>{a=0;o.x=o.y=0;kn.style.transform=''}}
 const joy2={x:0,y:0};mkJoy($('joy'),$('kn'),joy);mkJoy($('joy2'),$('kn2'),joy2);
 function rs(){dpr=devicePixelRatio||1;sc=Math.max(.6,Math.min(1,innerWidth/1100));cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;vw=innerWidth/sc;vh=innerHeight/sc}onresize=rs;rs();
-function hit(px,py){if(px<30||py<30||px>W-30||py>H-30)return 1;if(Math.hypot(px-430*Z,py-1000*Z)<130)return 1;if((B?[]:NP).some(n=>Math.hypot(px-n.x,py-n.y)<30))return 1;return inB(px/Z,py/Z)?0:1}
+function hit(px,py){if(px<30||py<30||px>W-30||py>H-30)return 1;if(Math.hypot(px-430*Z,py-1000*Z)<130)return 1;if((B||OL?[]:NP).some(n=>Math.hypot(px-n.x,py-n.y)<30))return 1;return inB(px/Z,py/Z)?0:1}
 function inB(a,b){if(b>=270&&b<700)return a>270&&a<590;if(b>=700&&b<1560)return a>85&&a<775;if(b>=1560){if(b<1720&&a>195&&a<665)return 1;const u=b-1550,l=330-u*.172,r=530+u*.188,h=b>2400?135:115;return Math.abs(a-l)<h||Math.abs(a-r)<h}return 0}
-function home(){modal('<h3>Kembali ke menu awal?</h3><p>'+(B?'Battle akan dihentikan.':'Progres latihan tetap tersimpan.')+'</p><button onclick="goHome(1)">Ya, ke menu</button><button class="o" onclick="cl()">Batal</button>')}
+function home(){modal('<h3>Kembali ke menu awal?</h3><p>'+(B||OL?'Battle akan dihentikan.':'Progres latihan tetap tersimpan.')+'</p><button onclick="goHome(1)">Ya, ke menu</button><button class="o" onclick="cl()">Batal</button>')}
 function rr(a,b,w,h,r){x.beginPath();x.roundRect(a,b,w,h,r);x.fill()}
 function man(px,py,col,d,w,hair){x.save();x.translate(px,py);x.fillStyle='#0003';x.beginPath();x.ellipse(0,28,16,6,0,0,7);x.fill();const s=Math.sin(w*10)*(w>0?1:0),b=s*2,l=s*5;
 x.fillStyle='#35406b';x.fillRect(-9,12,7,14+l);x.fillRect(2,12,7,14-l);x.fillStyle=col;rr(-12,-6+b,24,22,6);x.fillStyle='#f4c9a0';x.fillRect(-17,-3+b-l/2,5,14);x.fillRect(12,-3+b+l/2,5,14);x.beginPath();x.arc(0,-16+b,13,0,7);x.fill();
@@ -157,12 +158,12 @@ ST.forEach(s=>{x.font='bold 17px sans-serif';x.textAlign='center';const m=x.meas
 else if(s.t=='par'){cnt('o',P.o2,s.x-60,s.y+58);cnt('c',nn('c'),s.x-60,s.y+96)}
 else if(s.t=='usu')cnt('g',P.gl,s.x-30,s.y+46);
 else if(s.t=='gin')cnt('s',nn('w'),s.x-30,s.y+32)});
-(B?[]:NP).forEach(n=>{man(n.x,n.y,n.c,0,0,n.h);x.fillStyle='#fffd';x.font='bold 13px sans-serif';const m=x.measureText(n.n).width+10;rr(n.x-m/2,n.y-62,m,20,8);x.fillStyle='#24325a';x.fillText(n.n,n.x,n.y-47)});
-const mi=B?-1:mis()[0],g=(B||(mi>=2&&mi<=4)||(mi>=6&&mi<=8))?tg():mis()[2];if(g){const a=t/200;x.setLineDash([8,10]);x.strokeStyle='#ffd23f';x.lineWidth=4;x.beginPath();x.moveTo(P.x,P.y);x.lineTo(g.x,g.y);x.stroke();x.setLineDash([]);x.strokeStyle='#ffd23f';x.lineWidth=5;x.beginPath();x.arc(g.x,g.y-100+Math.sin(a)*5,12,0,7);x.stroke();x.fillStyle='#ffd23f';x.beginPath();x.moveTo(g.x-14,g.y-125);x.lineTo(g.x+14,g.y-125);x.lineTo(g.x,g.y-108);x.fill()}
-L.forEach(Q=>{man(Q.x,Q.y,AV[Q.av],Q.dr||0,Q.wk?t/1000:0,'#3a2a1a');if(B){x.fillStyle='#24325a';x.font='bold 13px sans-serif';x.fillText(Q.name,Q.x,Q.y-40)}const ci={RBC:['r'],'RBC+O2':['r','o'],'RBC+CO2':['r','c'],GLU:['g'],W:['s']}[Q.carry];if(ci){const sz=44,x0=Q.x-ci.length*sz/2;ci.forEach((k,i)=>{const im=IC[k];if(im&&im.complete!==false)x.drawImage(im,x0+i*sz,Q.y-92,sz,sz)})}});
+(B||OL?[]:NP).forEach(n=>{man(n.x,n.y,n.c,0,0,n.h);x.fillStyle='#fffd';x.font='bold 13px sans-serif';const m=x.measureText(n.n).width+10;rr(n.x-m/2,n.y-62,m,20,8);x.fillStyle='#24325a';x.fillText(n.n,n.x,n.y-47)});
+const mi=(B||OL)?-1:mis()[0],g=(B||OL||(mi>=2&&mi<=4)||(mi>=6&&mi<=8))?tg():mis()[2];if(g){const a=t/200;x.setLineDash([8,10]);x.strokeStyle='#ffd23f';x.lineWidth=4;x.beginPath();x.moveTo(P.x,P.y);x.lineTo(g.x,g.y);x.stroke();x.setLineDash([]);x.strokeStyle='#ffd23f';x.lineWidth=5;x.beginPath();x.arc(g.x,g.y-100+Math.sin(a)*5,12,0,7);x.stroke();x.fillStyle='#ffd23f';x.beginPath();x.moveTo(g.x-14,g.y-125);x.lineTo(g.x+14,g.y-125);x.lineTo(g.x,g.y-108);x.fill()}
+L.forEach(Q=>{man(Q.x,Q.y,AV[Q.av],Q.dr||0,Q.wk?t/1000:0,'#3a2a1a');if(B||OL){x.fillStyle='#24325a';x.font='bold 13px sans-serif';x.fillText(Q.name,Q.x,Q.y-40)}const ci={RBC:['r'],'RBC+O2':['r','o'],'RBC+CO2':['r','c'],GLU:['g'],W:['s']}[Q.carry];if(ci){const sz=44,x0=Q.x-ci.length*sz/2;ci.forEach((k,i)=>{const im=IC[k];if(im&&im.complete!==false)x.drawImage(im,x0+i*sz,Q.y-92,sz,sz)})}});
 x.restore();S=s0}
-function draw(t){x.setTransform(dpr*sc,0,0,dpr*sc,0,0);x.fillStyle='#eee';x.fillRect(0,0,vw,vh);const L=B||[S],w=vw/L.length;
-L.forEach((P,i)=>{const cm=CM[i],tx=W>w?Math.max(0,Math.min(W-w,P.x-w/2)):(W-w)/2,ty=Math.max(0,Math.min(H-vh,P.y-vh/2));cm.x+=(tx-cm.x)*.12;cm.y+=(ty-cm.y)*.12;wd(t,P,cm,i*w,w,L)});
+function draw(t){x.setTransform(dpr*sc,0,0,dpr*sc,0,0);x.fillStyle='#eee';x.fillRect(0,0,vw,vh);const V=B||[S],L=B||(OL&&OL.opp?[S,OL.opp]:[S]),w=vw/V.length;
+V.forEach((P,i)=>{const cm=CM[i],tx=W>w?Math.max(0,Math.min(W-w,P.x-w/2)):(W-w)/2,ty=Math.max(0,Math.min(H-vh,P.y-vh/2));cm.x+=(tx-cm.x)*.12;cm.y+=(ty-cm.y)*.12;wd(t,P,cm,i*w,w,L)});
 if(B){x.fillStyle='#fff';x.fillRect(vw/2-2,0,4,vh)}else{const mw=50,mh=150,mx=vw-mw-8,my=70;x.fillStyle='#fffb';x.fillRect(mx,my,mw,mh);ST.forEach(s=>{x.fillStyle='#2f7f6f';x.fillRect(mx+s.x/W*mw-2,my+s.y/H*mh-2,4,4)});x.fillStyle='#e0475b';x.beginPath();x.arc(mx+S.x/W*mw,my+S.y/H*mh,4,0,7);x.fill()}}
 function step(P,dx,dy,dt){const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}P.wk=l>.1?1:0;if(l>.1)P.dr=Math.abs(dx)>Math.abs(dy)?(dx<0?2:3):(dy<0?1:0);const nx=P.x+dx*250*dt,ny=P.y+dy*250*dt;if(!hit(nx,P.y))P.x=nx;if(!hit(P.x,ny))P.y=ny}
 const tP=P=>{const s=S;S=P;const n=tot();S=s;return n};
@@ -189,7 +190,7 @@ let FB=null,DB=null,AU=null,CC=null,lastPush=0;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 function loadFB(cb){if(FB)return cb();const u=['app','auth','database'].map(m=>'https://www.gstatic.com/firebasejs/10.12.2/firebase-'+m+'-compat.js');let i=0;const nx=()=>{if(i>=3){firebase.initializeApp(FB_CONFIG);FB=firebase;DB=firebase.database();AU=firebase.auth();return cb()}const s=document.createElement('script');s.src=u[i++];s.onload=nx;s.onerror=()=>tt('Gagal memuat Firebase');document.head.append(s)};nx()}
 const _begin=begin;begin=function(c){_begin(c);const k=String(S.cls||'').toUpperCase().trim();CC=null;if(FB_CONFIG&&/^[A-Z0-9]{5}$/.test(k))loadFB(()=>{AU.signInAnonymously().then(()=>DB.ref('classes/'+k).once('value')).then(s=>{if(s.exists()){CC=k;tt('Terhubung ke kelas '+(s.val().name||k));push(1)}else tt('Kode kelas tidak ditemukan. Bermain tanpa pencatatan.')}).catch(()=>tt('Tidak bisa terhubung ke server'))})};
-function push(f){if(!CC||!S||B||!AU||!AU.currentUser)return;const n=Date.now();if(!f&&n-lastPush<4000)return;lastPush=n;const a=Object.keys(CN).map(k=>S.q.t[k]?Math.round(100*(S.q.c[k]||0)/S.q.t[k]):0);DB.ref('results/'+CC+'/'+AU.currentUser.uid).set({n:String(S.name).slice(0,20),xp:S.xp,mi:Math.min(mis()[0],10),t:tot(),tm:Math.round(S.tm),er:S.err,ac:acc(),c:a,d:S.f.arena?1:0,u:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{})}
+function push(f){if(!CC||!S||B||OL||!AU||!AU.currentUser)return;const n=Date.now();if(!f&&n-lastPush<4000)return;lastPush=n;const a=Object.keys(CN).map(k=>S.q.t[k]?Math.round(100*(S.q.c[k]||0)/S.q.t[k]):0);DB.ref('results/'+CC+'/'+AU.currentUser.uid).set({n:String(S.name).slice(0,20),xp:S.xp,mi:Math.min(mis()[0],10),t:tot(),tm:Math.round(S.tm),er:S.err,ac:acc(),c:a,d:S.f.arena?1:0,u:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{})}
 const _save=save;save=function(){_save();push()};
 const _cl=cl;cl=function(){if(window.tref){window.tref.off();window.tref=null}_cl()};
 function tchr(){if(!FB_CONFIG)return modal('<h3>👩‍🏫 Menu Guru</h3><p>Fitur ini aktif setelah game dihubungkan ke Firebase (lihat panduan pemasangan).</p><button onclick="cl()">Tutup</button>');loadFB(()=>{const u=AU.currentUser;u&&!u.isAnonymous?tdash():tlogin()})}
@@ -229,5 +230,39 @@ const _a1=act1;act1=function(){const c=S.carry,t0=tot(),e=S.err;_a1();if(S.err>e
 const _tt=tt;tt=function(m){_tt(m);if(/Naik level/.test(m))sfx('level');else if(/Misi selesai/.test(m))sfx('mission');else if(/Lencana/.test(m))sfx('badge');else if(/Penemuan baru/.test(m))sfx('disc')};
 const _fb=fb;fb=function(g,e){_fb(g,e);sfx(g?'pick':'err')};
 const _md=modal;modal=function(h){_md(h);if(/EKSPEDISI SELESAI|Pemenang/.test(h))sfx('win')};
+
+/* ===== BATTLE ONLINE (beda perangkat) ===== */
+const _bf=battleMenu;
+battleMenu=function(){modal('<h2>⚔️ Battle</h2><button style="display:block;width:100%" onclick="_bf()">👥 Satu perangkat (2 pemain)</button><button class="o" style="display:block;width:100%" onclick="oform()">🌐 Online (beda perangkat)</button><button class="o" onclick="cl()">Batal</button>')};
+const OSP=[[380,1330],[480,1330]];
+const oerr=m=>{const e=$('oe');if(e)e.textContent=m;else tt(m)};
+function oform(){if(!FB_CONFIG)return modal('<p>Battle online belum aktif (Firebase belum terhubung).</p><button onclick="cl()">Tutup</button>');modal('<h2>🌐 Battle Online</h2><p>Satu pemain per perangkat. Buat ruangan lalu bagikan kodenya, atau gabung dengan kode dari temanmu.</p><input id="on" placeholder="Nama panggilan" maxlength="20" value="'+esc($('nm').value)+'"><input id="oc" placeholder="Kode kelas (opsional)" maxlength="8"><br><button onclick="ohost()">Buat ruangan</button><br><input id="or" placeholder="Kode ruangan" maxlength="4" style="text-transform:uppercase"><button class="o" onclick="ojoin()">Gabung</button><p id="oe" style="color:#c0334a"></p><button class="o" onclick="cl()">Batal</button>')}
+function olInit(cb){loadFB(()=>{(AU.currentUser?Promise.resolve():AU.signInAnonymously()).then(cb).catch(()=>oerr('Tidak bisa terhubung ke server'))})}
+function olClass(k){BCC=null;if(/^[A-Z0-9]{5}$/.test(k))DB.ref('classes/'+k).once('value').then(s=>{if(s.exists())BCC=k}).catch(()=>{})}
+function olSelf(n,i,av){return{uid:AU.currentUser.uid,n,av,x:OSP[i][0]*Z,y:OSP[i][1]*Z,t:0,c:'',dr:0,wk:0}}
+function ohost(){const n=($('on').value||'Pemain').slice(0,20),kc=String($('oc').value||'').toUpperCase().trim();olInit(()=>{olClass(kc);const A='ABCDEFGHJKLMNPQRSTUVWXYZ',mk=()=>Array.from({length:4},()=>A[Math.floor(Math.random()*A.length)]).join(''),go=k=>{const c=mk();DB.ref('rooms/'+c+'/p1').set(olSelf(n,0,sel)).then(()=>olWait(c,'p1','p2',n,0,sel)).catch(()=>k>0?go(k-1):oerr('Gagal membuat ruangan. Periksa aturan Firebase.'))};go(5)})}
+function ojoin(){const n=($('on').value||'Pemain').slice(0,20),kc=String($('oc').value||'').toUpperCase().trim(),c=String($('or').value||'').toUpperCase().trim();if(c.length!==4)return oerr('Masukkan kode ruangan 4 huruf');olInit(()=>{olClass(kc);DB.ref('rooms/'+c).once('value').then(s=>{const v=s.val();if(!v||!v.p1)return oerr('Ruangan tidak ditemukan');if(v.p2||v.go)return oerr('Ruangan sudah penuh');const av=v.p1.av===sel?(sel+1)%6:sel;return DB.ref('rooms/'+c+'/p2').set(olSelf(n,1,av)).then(()=>olWait(c,'p2','p1',n,1,av))}).catch(()=>oerr('Tidak bisa bergabung'))})}
+function olWait(c,me,them,n,i,av){OL={code:c,me,them,opp:null,tgt:null,seen:false,started:false,done:false,last:''};S=fresh();S.name=n;S.av=av;S.x=OSP[i][0]*Z;S.y=OSP[i][1]*Z;S.f={merah:1,scan:1,bening:1};B=null;CC=null;
+$('st').style.display='none';$('hud').style.display='';$('bar').style.display='';document.querySelectorAll('.pr1').forEach(e=>e.style.display='none');document.body.classList.remove('bt');run=true;
+DB.ref('rooms/'+c+'/'+me).onDisconnect().remove();OL.ref=DB.ref('rooms/'+c);OL.ref.on('value',s=>olUpd(s.val()));OL.iv=setInterval(olSync,160);
+modal(me==='p1'?'<h2>🌐 Menunggu lawan...</h2><p>Bagikan kode ruangan ini:</p><p style="font-size:34px;letter-spacing:6px;font-weight:bold">'+c+'</p><button class="o" onclick="goHome(0)">Batal</button>':'<h2>Terhubung!</h2><p>Menunggu pertandingan dimulai...</p>');hudO()}
+function olSync(){if(!OL||OL.done||!S)return;const d={x:Math.round(S.x),y:Math.round(S.y),t:tot(),c:S.carry,dr:S.dr||0,wk:S.wk||0},k=JSON.stringify(d);if(k===OL.last)return;OL.last=k;DB.ref('rooms/'+OL.code+'/'+OL.me).update(d).catch(()=>{})}
+function olUpd(v){if(!OL)return;if(!v){if(OL.seen&&!OL.done)olEnd('Ruangan ditutup.');return}
+const o=v[OL.them];
+if(o){OL.seen=true;OL.tgt=o;if(!OL.opp)OL.opp={name:o.n,av:o.av,x:o.x,y:o.y,carry:'',dr:0,wk:0,t:0};const p=OL.opp;p.name=o.n;p.av=o.av;p.carry=o.c||'';p.dr=o.dr||0;p.wk=o.wk||0;p.t=o.t||0}
+else if(OL.seen&&!OL.done){olEnd('Lawan meninggalkan pertandingan.');return}
+if(OL.me==='p1'&&v.p1&&v.p2&&!v.go&&!OL.sentGo){OL.sentGo=1;DB.ref('rooms/'+OL.code+'/go').set(firebase.database.ServerValue.TIMESTAMP).catch(()=>{})}
+if(v.go&&!OL.started){OL.started=true;olCount()}
+if(v.w&&!OL.done)olFinish(v.w);hudO()}
+function olCount(){$('ov').style.display='none';busy=true;let n=3;const f=()=>{if(!OL||OL.done)return;if(n>0){tt(String(n));sfx('click');n--;setTimeout(f,900)}else{tt('MULAI!');sfx('level');busy=false;S.tm=0}};f()}
+function olWin(){DB.ref('rooms/'+OL.code+'/w').set(OL.me).catch(()=>{})}
+function olFinish(w){OL.done=true;const nm=w===OL.me?S.name:(OL.opp?OL.opp.name:'Lawan');pushO();modal('<h2>🏆 Pemenang: '+esc(nm)+'</h2><p>'+esc(S.name)+': '+tot()+'/20<br>'+esc(OL.opp?OL.opp.name:'Lawan')+': '+(OL.opp?OL.opp.t:0)+'/20</p><button onclick="goHome(0)">Menu</button>')}
+function olEnd(m){OL.done=true;modal('<h3>'+esc(m)+'</h3><button onclick="goHome(0)">Menu</button>')}
+function pushO(){if(!BCC||!AU||!AU.currentUser||!OL)return;const n=tot();DB.ref('results/'+BCC+'/'+AU.currentUser.uid+'_b1').set({n:String(S.name).slice(0,20),xp:n*20,mi:0,t:n,tm:Math.round(S.tm),er:S.err,ac:0,c:[0,0,0,0],d:n>=20?1:0,m:1,u:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{})}
+function hudO(){if(!OL||!S)return;const o=OL.opp;$('hud').innerHTML='<b>⚔️ BATTLE ONLINE</b> · ruangan <b>'+OL.code+'</b><br><b style="color:'+AV[S.av]+'">'+esc(S.name)+'</b> '+tot()+'/20<br><b style="color:'+(o?AV[o.av]:'#888')+'">'+esc(o?o.name:'(menunggu lawan)')+'</b> '+(o?o.t:0)+'/20<br><small>💡 '+tip()+'</small>'}
+function olCleanup(){if(!OL)return;clearInterval(OL.iv);try{OL.ref.off();const r=DB.ref('rooms/'+OL.code+'/'+OL.me);r.onDisconnect().cancel();r.remove()}catch(e){}OL=null}
+const _gh=goHome;goHome=function(sv){const was=!!OL;olCleanup();_gh(was?0:sv)};
+(function tk(){if(OL&&OL.opp&&OL.tgt){const o=OL.opp,q=OL.tgt;o.x+=(q.x-o.x)*.3;o.y+=(q.y-o.y)*.3}requestAnimationFrame(tk)})();
+const _a3=act1;act1=function(){_a3();if(OL&&OL.started&&!OL.done&&tot()>=20)olWin()};
 </script>
 </body></html>
